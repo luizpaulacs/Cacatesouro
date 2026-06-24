@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caça ao Tesouro Real</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; text-align: center; color: #333; }
+        .card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
+        .btn { background: #007bff; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
+        .btn:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #bd2130; }
+        input { width: 100%; padding: 10px; margin-top: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        .area-validacao, .tela-jogo { display: none; margin-top: 20px; }
+        .pista-img { max-width: 100%; border-radius: 5px; margin-top: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        #camera-qr { width: 100%; max-width: 300px; background: #000; margin: 15px auto; display: none; min-height: 250px; border-radius: 5px; }
+    </style>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+
+    <div id="tela-autenticacao" class="card">
+        <h2>Cadastro da Equipe</h2>
+        <input type="text" id="auth-equipe" placeholder="Nome da Equipe ou Jogador">
+        <input type="email" id="auth-email" placeholder="E-mail da Equipe">
+        <input type="password" id="auth-senha" placeholder="Senha de Acesso (mín. 6 caracteres)">
+        
+        <button type="button" class="btn" onclick="cadastrarEquipe()">Criar Equipe e Entrar</button>
+        <button type="button" class="btn" style="background: #6c757d;" onclick="loginEquipe()">Já tenho cadastro (Entrar)</button>
+        
+        <p id="auth-status" style="margin-top:15px; font-weight:bold; color:#dc3545;"></p>
+    </div>
+
+    <div id="tela-jogo" class="card tela-jogo">
+        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px;">
+            <span id="nome-equipe-painel" style="font-weight:bold; color:#4a5568;">Equipe: -</span>
+            <button type="button" class="btn btn-danger" style="width:auto; margin:0; padding:6px 12px; font-size:12px;" onclick="desconectar()">Sair</button>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #edf2f7;">
+        
+        <h2 id="pista-titulo">Carregando enigma...</h2>
+        <p id="pista-texto">Buscando coordenadas da sua próxima pista...</p>
+        <img id="pista-imagem" class="pista-img" src="" style="display: none;" alt="Imagem Dica">
+
+        <div id="validacao-texto" class="area-validacao">
+            <label style="font-weight: bold; display: block; margin-top: 10px;">Digite o código encontrado:</label>
+            <input type="text" id="input-resposta" placeholder="Sua resposta aqui...">
+            <button type="button" class="btn" onclick="validarTexto()">Enviar Resposta</button>
+        </div>
+
+        <div id="validacao-gps" class="area-validacao">
+            <p style="color:#4a5568;">Você precisa estar fisicamente no local correto.</p>
+            <button type="button" class="btn" onclick="validarGPS()">Verificar Minha Localização</button>
+        </div>
+
+        <div id="validacao-qrcode" class="area-validacao">
+            <p style="color:#4a5568;">Encontre e escaneie o código QR oculto.</p>
+            <button type="button" class="btn" onclick="iniciarLeituraQR()">Abrir Câmera do Scanner</button>
+            <div id="camera-qr"></div>
+        </div>
+        
+        <p id="mensagem-status" style="margin-top: 20px; font-weight: bold; font-size: 15px;"></p>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
