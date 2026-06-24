@@ -1,148 +1,95 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Caça ao Tesouro</title>
-    <link rel="stylesheet" href="styles.css">
-    <script type="importmap">
-        {
-            "imports": {
-                "html5-qrcode": "https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
-            }
-        }
-    </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Caça ao Tesouro</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
 </head>
+
 <body>
-    <!-- Tela de Login -->
-    <div id="loginScreen" class="screen active">
-        <div class="container">
-            <h1>🏴‍☠️ Caça ao Tesouro</h1>
-            
-            <div id="firebaseStatus" style="text-align:center;padding:12px;background:#fff3cd;border-radius:8px;margin-bottom:15px;font-size:0.9em;border:2px solid #ffc107;">
-                ⏳ Aguardando conexão...
-            </div>
-            
-            <div id="debugLog" style="background:#1a1a2e;color:#00ff41;padding:10px;border-radius:8px;margin-bottom:15px;font-family:monospace;font-size:11px;max-height:200px;overflow-y:auto;">
-                <div id="debugContent">>> Sistema iniciado...</div>
-            </div>
-            
-            <div id="authForm">
-                <input type="email" id="emailInput" placeholder="E-mail da equipe" value="akagaipora@gmail.com">
-                <input type="password" id="passwordInput" placeholder="Senha" value="123456">
-                
-                <div style="display:flex;gap:10px;margin:15px 0;flex-wrap:wrap;">
-                    <button onclick="window.auth.login()" style="flex:1;min-width:120px;padding:14px;background:#764ba2;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
-                        🔐 Entrar
-                    </button>
-                    <button onclick="window.auth.register()" style="flex:1;min-width:120px;padding:14px;background:#667eea;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
-                        ✨ Criar
-                    </button>
-                </div>
-                
-                <div id="authMessage" class="message"></div>
-                
-                <div style="margin-top:20px;padding:12px;background:#f8f9fa;border-radius:8px;font-size:0.9em;color:#666;border-left:4px solid #764ba2;">
-                    <strong>💡 Dica:</strong><br>
-                    Use o email <strong>akagaipora@gmail.com</strong> que já está cadastrado.
-                </div>
-            </div>
-        </div>
+
+<div class="container">
+
+    <div class="card" id="loginBox">
+
+        <h2>Equipe</h2>
+
+        <input
+            type="text"
+            id="nomeEquipe"
+            placeholder="Nome da Equipe">
+
+        <input
+            type="email"
+            id="email"
+            placeholder="Email">
+
+        <input
+            type="password"
+            id="senha"
+            placeholder="Senha">
+
+        <button id="btnCadastro">
+            Criar Equipe
+        </button>
+
+        <br><br>
+
+        <button id="btnLogin">
+            Entrar
+        </button>
+
     </div>
 
-    <!-- Tela do Jogo -->
-    <div id="gameScreen" class="screen">
-        <div class="container">
-            <header>
-                <h2 id="teamName">Equipe: ---</h2>
-                <button onclick="window.auth.logout()" class="logout-btn">Sair</button>
-            </header>
-            
-            <div id="gameContent">
-                <div id="stepInfo">
-                    <div class="step-badge">Etapa <span id="currentStep">1</span></div>
-                    <h3 id="stepTitle">Carregando...</h3>
-                </div>
-                
-                <div id="puzzleContent">
-                    <p id="puzzleText">Carregando enigma...</p>
-                    <div id="puzzleImage"></div>
-                </div>
+    <div id="jogo" style="display:none;">
 
-                <div id="validationArea">
-                    <p style="color:#888;text-align:center;">Aguardando carregamento...</p>
-                </div>
+        <div class="card">
 
-                <div id="gameMessage" class="message"></div>
-            </div>
+            <h2 id="tituloEtapa"></h2>
+
+            <span
+            id="numeroEtapa"
+            class="badge"></span>
+
         </div>
+
+        <div class="card">
+
+            <img
+            id="imagemDica"
+            style="display:none">
+
+            <p id="textoEnigma"></p>
+
+        </div>
+
+        <div
+        class="card"
+        id="validacaoArea">
+
+        </div>
+
+        <div class="card">
+
+            <h3>Histórico</h3>
+
+            <ul id="historico"></ul>
+
+        </div>
+
     </div>
 
-    <!-- Tela de Banimento -->
-    <div id="bannedScreen" class="screen">
-        <div class="container">
-            <h1>⛔ Acesso Negado</h1>
-            <p>Sua equipe foi desativada.</p>
-            <button onclick="window.auth.logout()" style="width:100%;padding:14px;background:#764ba2;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
-                Sair
-            </button>
-        </div>
-    </div>
+</div>
 
-    <!-- ====== SCRIPTS ====== -->
-    
-    <script>
-        // Função de log visual
-        window.addDebugLog = function(msg, type = 'info') {
-            const content = document.getElementById('debugContent');
-            const time = new Date().toLocaleTimeString();
-            const colors = {
-                info: '#00ff41',
-                error: '#ff4444',
-                success: '#00ff88',
-                warning: '#ffaa00'
-            };
-            content.innerHTML += `<div style="color:${colors[type] || '#00ff41'}">[${time}] ${msg}</div>`;
-            content.scrollTop = content.scrollHeight;
-            
-            const status = document.getElementById('firebaseStatus');
-            if (type === 'error') {
-                status.innerHTML = '❌ ' + msg;
-                status.style.background = '#f8d7da';
-                status.style.color = '#721c24';
-                status.style.borderColor = '#dc3545';
-            } else if (type === 'success') {
-                status.innerHTML = '✅ ' + msg;
-                status.style.background = '#d4edda';
-                status.style.color = '#155724';
-                status.style.borderColor = '#28a745';
-            } else {
-                status.innerHTML = 'ℹ️ ' + msg;
-                status.style.background = '#fff3cd';
-                status.style.color = '#856404';
-                status.style.borderColor = '#ffc107';
-            }
-        };
-        
-        window.addDebugLog('📄 HTML carregado', 'info');
-        window.addDebugLog('⏳ Carregando Firebase...', 'info');
-    </script>
-    
-    <!-- SCRIPT PRINCIPAL - AGORA VAI FUNCIONAR -->
-    <script type="module">
-        try {
-            window.addDebugLog('🔄 Importando script.js...', 'info');
-            import('./script.js').then(() => {
-                window.addDebugLog('✅ script.js carregado!', 'success');
-                window.addDebugLog('🎮 Jogo pronto para usar!', 'success');
-            }).catch((error) => {
-                window.addDebugLog(`❌ Erro: ${error.message}`, 'error');
-            });
-        } catch (error) {
-            window.addDebugLog(`❌ Erro crítico: ${error.message}`, 'error');
-        }
-    </script>
-    
-    <!-- NÃO TEM MAIS SCRIPT DE EMERGÊNCIA PARA EVITAR CONFLITO -->
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/game.js"></script>
+
 </body>
 </html>
