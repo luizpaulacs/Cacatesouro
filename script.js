@@ -1,20 +1,36 @@
-// script.js - Versão Simplificada
+// script.js
 console.log('🚀 script.js INICIOU!');
 
-import { auth, db } from './firebase-config.js';
+// 🔴 SUAS CREDENCIAIS COMPLETAS AQUI
+const firebaseConfig = {
+    apiKey: "AIzaSyB5VC5go9cF3kVvX5HqL8tVnR6PkS2M7o",  // COLE A CHAVE COMPLETA
+    authDomain: "cacaoatesouro-16c97.firebaseapp.com",
+    projectId: "cacaoatesouro-16c97",
+    storageBucket: "cacaoatesouro-16c97.appspot.com",
+    messagingSenderId: "642869571833",
+    appId: "1:642869571833:web:1a2b3c4d5e6f7g8h9i0j"
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { 
+    getAuth, 
     onAuthStateChanged, 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
     signOut 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
+    getFirestore, 
     doc, getDoc, updateDoc, arrayUnion, serverTimestamp, setDoc 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-console.log('✅ Importações concluídas');
+// Inicializar Firebase DIRETAMENTE (sem importar de outro arquivo)
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Função de log
+console.log('✅ Firebase inicializado:', firebaseConfig.projectId);
+
 function log(msg, type = 'info') {
     console.log(msg);
     if (window.addDebugLog) {
@@ -39,8 +55,6 @@ const puzzleImage = document.getElementById('puzzleImage');
 const validationArea = document.getElementById('validationArea');
 const gameMessage = document.getElementById('gameMessage');
 
-log('✅ Elementos DOM capturados', 'success');
-
 // ===== FUNÇÕES DE AUTENTICAÇÃO =====
 const authFunctions = {
     login: async function() {
@@ -56,7 +70,7 @@ const authFunctions = {
             }
             
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            log(`✅ Login bem-sucedido: ${userCredential.user.uid}`, 'success');
+            log(`✅ Login OK: ${userCredential.user.uid}`, 'success');
             
         } catch (error) {
             log(`❌ Erro: ${error.message}`, 'error');
@@ -69,7 +83,7 @@ const authFunctions = {
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
             
-            log(`📝 Criando equipe: ${email}`, 'info');
+            log(`📝 Criando: ${email}`, 'info');
             
             if (!email || !password) {
                 showAuthMessage('Preencha todos os campos', 'error');
@@ -116,7 +130,7 @@ const authFunctions = {
 const gameFunctions = {
     loadStep: async function(stepNumber) {
         try {
-            log(`📖 Carregando etapa ${stepNumber}`, 'info');
+            log(`📖 Etapa ${stepNumber}`, 'info');
             const stepDoc = await getDoc(doc(db, 'pistas', `etapa_${stepNumber}`));
             
             if (!stepDoc.exists()) {
@@ -209,7 +223,7 @@ function showGameMessage(msg, type) {
     }
 }
 
-// ===== OBSERVADOR DE AUTENTICAÇÃO =====
+// ===== OBSERVADOR =====
 onAuthStateChanged(auth, async (user) => {
     log(`🔄 Auth: ${user ? 'Logado' : 'Deslogado'}`, 'info');
     
@@ -254,4 +268,3 @@ window.auth = authFunctions;
 window.game = gameFunctions;
 
 log('✅ Script pronto!', 'success');
-log('📝 Use: window.auth.login()', 'info');
