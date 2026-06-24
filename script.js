@@ -3,7 +3,7 @@ console.log('🚀 script.js INICIOU!');
 
 // 🔴 SUAS CREDENCIAIS COMPLETAS AQUI
 const firebaseConfig = {
-    apiKey: "AIzaSyB5VC5go9cF3kVvX5HqL8tVnR6PkS2M7o",  // COLE A CHAVE COMPLETA
+    apiKey: "AIzaSyB5VCSgo9cUpWVWtZhNraOTLmpt_D0ElVM",  // COLE A CHAVE COMPLETA
     authDomain: "cacaoatesouro-16c97.firebaseapp.com",
     projectId: "cacaoatesouro-16c97",
     storageBucket: "cacaoatesouro-16c97.appspot.com",
