@@ -108,6 +108,22 @@
                 status.style.color = '#721c24';
             }
         }, 3000);
+  <!-- Adicione ANTES do fechamento do body -->
+<script type="module">
+    // Script de emergência para testar diretamente
+    import { auth, db } from './firebase-config.js';
+    import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    
+    console.log('🚨 Script de emergência carregado');
+    
+    // Tentar login automático com as credenciais do teste
+    try {
+        const result = await signInWithEmailAndPassword(auth, 'akagaipora@gmail.com', '123456');
+        console.log('✅ Login automático bem-sucedido!', result.user.uid);
+    } catch (error) {
+        console.error('❌ Login automático falhou:', error.message);
+    }
     </script>
+    
 </body>
 </html>
