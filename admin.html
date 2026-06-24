@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Caça ao Tesouro</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>🏴‍☠️ Painel Administrativo</h1>
+            <button onclick="window.admin.logout()" class="logout-btn">Sair</button>
+        </header>
+
+        <div class="admin-grid">
+            <!-- Coluna 1: Cadastro de Pistas -->
+            <section class="admin-section">
+                <h2>📝 Cadastro de Pistas</h2>
+                <form id="pistaForm">
+                    <div class="form-group">
+                        <label>Número da Etapa</label>
+                        <input type="number" id="etapaNumero" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Título</label>
+                        <input type="text" id="etapaTitulo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Enigma</label>
+                        <textarea id="etapaEnigma" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Validação</label>
+                        <select id="etapaTipo" onchange="window.admin.updatePlaceholder()">
+                            <option value="texto">Texto</option>
+                            <option value="qr_code">QR Code</option>
+                            <option value="gps">GPS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Resposta Esperada</label>
+                        <input type="text" id="etapaResposta" placeholder="Palavra-chave" required>
+                    </div>
+                    <div class="form-group">
+                        <label>URL da Imagem (opcional)</label>
+                        <input type="url" id="etapaImagem" placeholder="https://exemplo.com/imagem.jpg">
+                    </div>
+                    <div class="button-group">
+                        <button type="button" onclick="window.admin.salvarPista()">Salvar Pista</button>
+                        <button type="button" onclick="window.admin.carregarPista()" class="secondary">Carregar Pista</button>
+                    </div>
+                    <div id="adminMessage" class="message"></div>
+                </form>
+            </section>
+
+            <!-- Coluna 2: Monitoramento -->
+            <section class="admin-section">
+                <h2>👥 Monitoramento de Jogadores</h2>
+                <div class="monitoring-controls">
+                    <button onclick="window.admin.iniciarMonitoramento()">Iniciar Monitoramento</button>
+                    <button onclick="window.admin.pararMonitoramento()" class="secondary">Parar</button>
+                </div>
+                <div id="playersTableContainer">
+                    <div id="loadingPlayers">Clique em "Iniciar Monitoramento" para ver os jogadores</div>
+                    <table id="playersTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Equipe</th>
+                                <th>Etapa</th>
+                                <th>Última Atividade</th>
+                                <th>Status</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="playersBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="admin.js" type="module"></script>
+</body>
+</html>
