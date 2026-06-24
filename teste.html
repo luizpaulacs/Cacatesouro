@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Firebase</title>
+</head>
+<body>
+    <h2>Teste de Conexão Firebase</h2>
+    <div id="status"></div>
+    
+    <script type="importmap">
+    {
+        "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+        }
+    }
+    </script>
+    
+    <script type="module">
+        import { initializeApp } from "firebase/app";
+        import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+        import { getFirestore, doc, setDoc } from "firebase/firestore";
+        
+        // SUAS CREDENCIAIS AQUI
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_AUTH_DOMAIN",
+            projectId: "SEU_PROJECT_ID",
+            storageBucket: "SEU_STORAGE_BUCKET",
+            messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+            appId: "SEU_APP_ID"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        const status = document.getElementById('status');
+        status.textContent = '🔄 Testando conexão...';
+        
+        try {
+            // Teste: Criar usuário de teste
+            const email = 'teste' + Date.now() + '@email.com';
+            const password = '123456';
+            
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            
+            // Criar documento
+            await setDoc(doc(db, 'jogadores', user.uid), {
+                nome_equipe: 'Teste',
+                etapa_atual: 1,
+                ativo: true
+            });
+            
+            status.innerHTML = `
+                ✅ Conexão Firebase funcionando!<br>
+                📧 Email: ${email}<br>
+                🔑 UID: ${user.uid}<br>
+                <br>
+                <strong>🎉 Configuração correta!</strong>
+            `;
+            
+        } catch (error) {
+            status.innerHTML = `
+                ❌ Erro de conexão:<br>
+                ${error.message}<br>
+                <br>
+                <strong>Verifique suas credenciais no firebase-config.js</strong>
+            `;
+            console.error('Erro detalhado:', error);
+        }
+    </script>
+</body>
+</html>
