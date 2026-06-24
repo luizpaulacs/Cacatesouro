@@ -18,16 +18,30 @@
     <div id="loginScreen" class="screen active">
         <div class="container">
             <h1>🏴‍☠️ Caça ao Tesouro</h1>
+            
+            <!-- Status do Firebase -->
+            <div id="firebaseStatus" style="text-align:center;padding:10px;background:#f8f9fa;border-radius:8px;margin-bottom:15px;font-size:0.9em;">
+                ⏳ Carregando Firebase...
+            </div>
+            
             <div id="authForm">
                 <input type="email" id="emailInput" placeholder="E-mail da equipe" required>
                 <input type="password" id="passwordInput" placeholder="Senha (mínimo 6 caracteres)" required minlength="6">
-                <div class="button-group">
-                    <button onclick="window.auth.login()">🔐 Entrar</button>
-                    <button onclick="window.auth.register()" class="secondary">✨ Criar Equipe</button>
+                
+                <div style="display:flex;gap:10px;margin:15px 0;">
+                    <button onclick="window.auth.login()" style="flex:1;padding:14px;background:#764ba2;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
+                        🔐 Entrar
+                    </button>
+                    <button onclick="window.auth.register()" style="flex:1;padding:14px;background:#667eea;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
+                        ✨ Criar Equipe
+                    </button>
                 </div>
+                
                 <div id="authMessage" class="message"></div>
-                <div style="margin-top:15px;padding:10px;background:#f8f9fa;border-radius:8px;font-size:0.9em;color:#666;">
-                    <strong>💡 Dica:</strong> Crie uma nova equipe para começar a jogar.
+                
+                <div style="margin-top:20px;padding:12px;background:#f8f9fa;border-radius:8px;font-size:0.9em;color:#666;border-left:4px solid #764ba2;">
+                    <strong>💡 Dica:</strong><br>
+                    Use o email <strong>akagaipora@gmail.com</strong> que já está cadastrado.
                 </div>
             </div>
         </div>
@@ -65,11 +79,35 @@
     <div id="bannedScreen" class="screen">
         <div class="container">
             <h1>⛔ Acesso Negado</h1>
-            <p>Sua equipe foi desativada. Entre em contato com o administrador.</p>
-            <button onclick="window.auth.logout()">Sair</button>
+            <p>Sua equipe foi desativada.</p>
+            <button onclick="window.auth.logout()" style="width:100%;padding:14px;background:#764ba2;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
+                Sair
+            </button>
         </div>
     </div>
 
+    <!-- CARREGAR O SCRIPT -->
     <script src="script.js" type="module"></script>
+    
+    <!-- Script de verificação -->
+    <script>
+        console.log('📄 index.html carregado');
+        
+        // Verificar se o módulo carregou
+        setTimeout(() => {
+            const status = document.getElementById('firebaseStatus');
+            if (window.auth) {
+                console.log('✅ window.auth disponível!');
+                status.innerHTML = '✅ Firebase conectado! Pronto para jogar.';
+                status.style.background = '#d4edda';
+                status.style.color = '#155724';
+            } else {
+                console.error('❌ window.auth NÃO disponível');
+                status.innerHTML = '❌ Erro ao carregar o Firebase. Verifique o console (F12).';
+                status.style.background = '#f8d7da';
+                status.style.color = '#721c24';
+            }
+        }, 3000);
+    </script>
 </body>
 </html>

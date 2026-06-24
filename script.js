@@ -1,7 +1,5 @@
-// script.js
-import { 
-    auth, db 
-} from './firebase-config.js';
+// script.js - VERSÃO SIMPLIFICADA PARA TESTE
+import { auth, db } from './firebase-config.js';
 import { 
     onAuthStateChanged, 
     signInWithEmailAndPassword, 
@@ -11,16 +9,12 @@ import {
 import { 
     doc, getDoc, updateDoc, arrayUnion, serverTimestamp, setDoc 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { Html5Qrcode } from 'html5-qrcode';
 
-// Estado do jogo
-let currentUser = null;
-let currentTeam = null;
-let currentStep = 1;
-let scanner = null;
-let isProcessing = false;
+console.log('🚀 script.js carregado!');
+console.log('📋 Firebase Auth:', auth ? 'Disponível' : 'INDISPONÍVEL');
+console.log('📋 Firebase DB:', db ? 'Disponível' : 'INDISPONÍVEL');
 
-// DOM Elements
+// ===== DOM ELEMENTS =====
 const loginScreen = document.getElementById('loginScreen');
 const gameScreen = document.getElementById('gameScreen');
 const bannedScreen = document.getElementById('bannedScreen');
@@ -34,15 +28,26 @@ const puzzleText = document.getElementById('puzzleText');
 const puzzleImage = document.getElementById('puzzleImage');
 const validationArea = document.getElementById('validationArea');
 const gameMessage = document.getElementById('gameMessage');
+const firebaseStatus = document.getElementById('firebaseStatus');
 
-// ===== AUTH FUNCTIONS =====
+// Atualizar status do Firebase
+if (firebaseStatus) {
+    firebaseStatus.innerHTML = '✅ Firebase conectado!';
+    firebaseStatus.style.background = '#d4edda';
+    firebaseStatus.style.color = '#155724';
+}
+
+// ===== ESTADO =====
+let currentStep = 1;
+
+// ===== FUNÇÕES DE AUTENTICAÇÃO =====
 const authFunctions = {
-    login: async () => {
+    login: async function() {
         try {
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
             
-            console.log('🔐 Tentando login para:', email);
+            console.log('🔐 Tentando login:', email);
             
             if (!email || !password) {
                 showAuthMessage('Preencha todos os campos', 'error');
@@ -54,16 +59,27 @@ const authFunctions = {
             
         } catch (error) {
             console.error('❌ Erro no login:', error);
-            showAuthMessage(`Erro: ${error.message}`, 'error');
+            
+            let msg = 'Erro ao fazer login. ';
+            if (error.code === 'auth/user-not-found') {
+                msg += 'Usuário não encontrado. Crie uma nova equipe.';
+            } else if (error.code === 'auth/wrong-password') {
+                msg += 'Senha incorreta.';
+            } else if (error.code === 'auth/invalid-email') {
+                msg += 'Email inválido.';
+            } else {
+                msg += error.message;
+            }
+            showAuthMessage('❌ ' + msg, 'error');
         }
     },
     
-    register: async () => {
+    register: async function() {
         try {
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
             
-            console.log('📝 Tentando criar equipe para:', email);
+            console.log('📝 Tentando criar equipe:', email);
             
             if (!email || !password) {
                 showAuthMessage('Preencha todos os campos', 'error');
@@ -75,446 +91,226 @@ const authFunctions = {
                 return;
             }
             
-            // 1. Criar usuário no Firebase Auth
-            console.log('⏳ Criando usuário no Firebase Auth...');
+            // 1. Criar usuário
+            console.log('⏳ Criando usuário...');
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const uid = userCredential.user.uid;
             console.log('✅ Usuário criado com UID:', uid);
             
-            // 2. Criar documento do jogador no Firestore
+            // 2. Criar documento no Firestore
             console.log('⏳ Criando documento do jogador...');
-            const playerData = {
-                nome_equipe: email.split('@')[0] || 'Equipe',
+            const nomeEquipe = email.split('@')[0] || 'Equipe';
+            
+            await setDoc(doc(db, 'jogadores', uid), {
+                nome_equipe: nomeEquipe,
                 etapa_atual: 1,
                 ativo: true,
                 historico: [],
                 data_criacao: serverTimestamp()
-            };
+            });
+            console.log('✅ Documento criado!');
             
-            await setDoc(doc(db, 'jogadores', uid), playerData);
-            console.log('✅ Documento do jogador criado:', playerData);
-            
-            // 3. Confirmar criação
-            console.log('🎉 Equipe criada com sucesso!');
             showAuthMessage('✅ Equipe criada com sucesso! Faça login para jogar.', 'success');
             
             // Limpar campos
             emailInput.value = '';
             passwordInput.value = '';
             
-            // Opcional: Fazer login automático
-            // await signInWithEmailAndPassword(auth, email, password);
-            
         } catch (error) {
-            console.error('❌ Erro detalhado no cadastro:', {
-                code: error.code,
-                message: error.message,
-                stack: error.stack
-            });
+            console.error('❌ Erro no cadastro:', error);
             
-            // Mensagens de erro mais amigáveis
-            let userMessage = 'Erro ao criar equipe. ';
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    userMessage += 'Este email já está cadastrado. Use outro email ou faça login.';
-                    break;
-                case 'auth/invalid-email':
-                    userMessage += 'Email inválido. Verifique o formato.';
-                    break;
-                case 'auth/operation-not-allowed':
-                    userMessage += 'Cadastro não permitido. Contate o administrador.';
-                    break;
-                case 'auth/weak-password':
-                    userMessage += 'Senha muito fraca. Use pelo menos 6 caracteres.';
-                    break;
-                default:
-                    userMessage += error.message;
+            let msg = 'Erro ao criar equipe. ';
+            if (error.code === 'auth/email-already-in-use') {
+                msg += 'Este email já está cadastrado. Faça login.';
+            } else if (error.code === 'auth/invalid-email') {
+                msg += 'Email inválido.';
+            } else if (error.code === 'auth/weak-password') {
+                msg += 'Senha muito fraca. Use 6+ caracteres.';
+            } else {
+                msg += error.message;
             }
             
-            showAuthMessage('❌ ' + userMessage, 'error');
+            showAuthMessage('❌ ' + msg, 'error');
         }
     },
     
-    logout: async () => {
+    logout: async function() {
         try {
             console.log('👋 Deslogando...');
             await signOut(auth);
-            // Limpar scanner se estiver ativo
-            if (scanner) {
-                try {
-                    await scanner.stop();
-                    scanner = null;
-                } catch (e) {
-                    console.log('Scanner já estava parado');
-                }
-            }
         } catch (error) {
             console.error('Erro ao sair:', error);
         }
     }
 };
 
-// ===== GAME FUNCTIONS =====
+// ===== FUNÇÕES DO JOGO (Simplificadas) =====
 const gameFunctions = {
-    loadStep: async (stepNumber) => {
+    loadStep: async function(stepNumber) {
         try {
             console.log('📖 Carregando etapa:', stepNumber);
+            
+            // Tentar carregar a pista
             const stepDoc = await getDoc(doc(db, 'pistas', `etapa_${stepNumber}`));
             
             if (!stepDoc.exists()) {
-                // Se não houver próxima etapa, mostrar mensagem de vitória
-                console.log('🏆 Jogo finalizado!');
                 showGameMessage('🏆 Parabéns! Você completou todas as etapas!', 'success');
                 validationArea.innerHTML = '<p style="text-align:center;font-size:1.2em;">🎉 Jogo Finalizado!</p>';
                 return;
             }
             
             const stepData = stepDoc.data();
-            console.log('✅ Etapa carregada:', stepData);
-            
-            currentStep = stepNumber;
             currentStepSpan.textContent = stepNumber;
             stepTitle.textContent = stepData.titulo || `Etapa ${stepNumber}`;
             puzzleText.textContent = stepData.enigma_texto || 'Enigma não disponível';
             
-            // Carregar imagem se existir
-            if (stepData.imagem_dica_url) {
-                puzzleImage.innerHTML = `<img src="${stepData.imagem_dica_url}" alt="Dica visual" style="max-width:100%;">`;
-            } else {
-                puzzleImage.innerHTML = '';
-            }
-            
-            // Renderizar validação
-            renderValidation(stepData);
-            showGameMessage('', '');
-            
-        } catch (error) {
-            console.error('❌ Erro ao carregar etapa:', error);
-            showGameMessage(`Erro ao carregar etapa: ${error.message}`, 'error');
-        }
-    },
-    
-    validateText: async (stepData) => {
-        const input = document.getElementById('textInput');
-        if (!input) {
-            showGameMessage('Campo de resposta não encontrado', 'error');
-            return;
-        }
-        
-        const userAnswer = input.value.trim().toLowerCase();
-        const expected = stepData.resposta_esperada.toLowerCase();
-        
-        console.log('🔍 Validando texto:', { userAnswer, expected });
-        
-        if (!userAnswer) {
-            showGameMessage('Digite sua resposta', 'error');
-            return;
-        }
-        
-        if (userAnswer === expected) {
-            await completeStep(stepData);
-        } else {
-            showGameMessage('❌ Resposta incorreta. Tente novamente!', 'error');
-        }
-    },
-    
-    startScanner: (stepData) => {
-        const scannerContainer = document.getElementById('scannerContainer');
-        if (!scannerContainer) {
-            showGameMessage('Container do scanner não encontrado', 'error');
-            return;
-        }
-        
-        scannerContainer.innerHTML = '<div id="reader" style="width:100%;max-width:400px;"></div>';
-        
-        if (scanner) {
-            try {
-                scanner.clear();
-                scanner = null;
-            } catch (e) {
-                console.log('Scanner já estava limpo');
-            }
-        }
-        
-        try {
-            scanner = new Html5Qrcode("reader");
-            scanner.start(
-                { facingMode: "environment" },
-                { 
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 }
-                },
-                async (decodedText) => {
-                    console.log('📷 QR Code escaneado:', decodedText);
-                    try {
-                        await scanner.stop();
-                        if (decodedText === stepData.resposta_esperada) {
-                            await completeStep(stepData);
-                        } else {
-                            showGameMessage('❌ QR Code inválido!', 'error');
-                            scanner.start(
-                                { facingMode: "environment" },
-                                { fps: 10, qrbox: { width: 250, height: 250 } }
-                            );
-                        }
-                    } catch (error) {
-                        console.error('Erro no scanner:', error);
-                        showGameMessage(`Erro: ${error.message}`, 'error');
-                    }
-                },
-                (error) => {
-                    // Ignorar erros de scan
-                }
-            );
-        } catch (error) {
-            console.error('Erro ao iniciar scanner:', error);
-            showGameMessage(`Erro ao iniciar câmera: ${error.message}`, 'error');
-        }
-    },
-    
-    getGPSPosition: (stepData) => {
-        const [targetLat, targetLng] = stepData.resposta_esperada.split(',').map(Number);
-        
-        console.log('📍 Verificando GPS:', { targetLat, targetLng });
-        showGameMessage('📍 Obtendo localização...', 'success');
-        
-        if (!navigator.geolocation) {
-            showGameMessage('GPS não suportado neste dispositivo', 'error');
-            return;
-        }
-        
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                const distance = calculateDistance(latitude, longitude, targetLat, targetLng);
-                
-                console.log('📍 Posição atual:', { latitude, longitude, distance });
-                
-                if (distance <= 25) {
-                    await completeStep(stepData);
-                } else {
-                    showGameMessage(`📍 Você está a ${Math.round(distance)} metros do tesouro. Continue procurando!`, 'error');
-                }
-            },
-            (error) => {
-                console.error('❌ Erro de GPS:', error);
-                showGameMessage(`Erro de GPS: ${error.message}`, 'error');
-            },
-            { enableHighAccuracy: true, timeout: 15000 }
-        );
-    }
-};
-
-// ===== RENDER FUNCTIONS =====
-function renderValidation(stepData) {
-    const type = stepData.tipo_validacao;
-    validationArea.innerHTML = '';
-    
-    console.log('🎨 Renderizando validação tipo:', type);
-    
-    switch(type) {
-        case 'texto':
+            // Mostrar validação de texto (simplificado)
             validationArea.innerHTML = `
-                <input type="text" id="textInput" placeholder="Digite sua resposta..." autocomplete="off" style="width:100%;padding:12px;margin-bottom:10px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
-                <button onclick="window.game.validateText(window.currentStepData)" style="width:100%;padding:14px;background:#764ba2;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
+                <input type="text" id="textInput" placeholder="Digite sua resposta..." style="width:100%;padding:12px;margin-bottom:10px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+                <button onclick="window.game.validateText()" style="width:100%;padding:14px;background:#764ba2;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
                     Verificar Resposta
                 </button>
             `;
-            break;
             
-        case 'qr_code':
-            validationArea.innerHTML = `
-                <div id="scannerContainer">
-                    <button onclick="window.game.startScanner(window.currentStepData)" style="width:100%;padding:14px;background:#764ba2;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
-                        📷 Abrir Câmera
-                    </button>
-                </div>
-            `;
-            break;
+            // Salvar dados da etapa
+            window.currentStepData = stepData;
             
-        case 'gps':
-            validationArea.innerHTML = `
-                <div id="gpsInfo">
-                    <p style="margin:10px 0;">📍 Posicione-se próximo ao tesouro</p>
-                    <p style="margin:10px 0;font-size:0.9em;color:#666;"><small>Distância máxima: 25 metros</small></p>
-                </div>
-                <button onclick="window.game.getGPSPosition(window.currentStepData)" style="width:100%;padding:14px;background:#764ba2;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
-                    📍 Verificar Localização
-                </button>
-            `;
-            break;
-        
-        default:
-            validationArea.innerHTML = '<p style="color:#ff6b6b;">Tipo de validação não suportado</p>';
-    }
-    
-    // Salvar dados da etapa atual no escopo global
-    window.currentStepData = stepData;
-}
-
-// ===== COMPLETE STEP =====
-async function completeStep(stepData) {
-    if (isProcessing) return;
-    isProcessing = true;
-    
-    try {
-        const user = auth.currentUser;
-        if (!user) {
-            showGameMessage('Usuário não autenticado', 'error');
-            isProcessing = false;
-            return;
+        } catch (error) {
+            console.error('❌ Erro ao carregar etapa:', error);
+            showGameMessage(`Erro: ${error.message}`, 'error');
         }
-        
-        const uid = user.uid;
-        const nextStep = currentStep + 1;
-        
-        console.log('✅ Completando etapa:', { uid, currentStep, nextStep });
-        
-        await updateDoc(doc(db, 'jogadores', uid), {
-            etapa_atual: nextStep,
-            historico: arrayUnion({
-                etapa: currentStep,
-                tipo_validacao_usado: stepData.tipo_validacao,
-                sucesso: true,
-                data_hora_envio: serverTimestamp()
-            })
-        });
-        
-        console.log('✅ Etapa atualizada no banco');
-        showGameMessage('✅ Etapa concluída! Carregando próxima...', 'success');
-        
-        // Atualizar dados locais
-        await updateUserData();
-        
-        // Carregar próxima etapa
-        await gameFunctions.loadStep(nextStep);
-        
-    } catch (error) {
-        console.error('❌ Erro ao completar etapa:', error);
-        showGameMessage(`Erro ao completar etapa: ${error.message}`, 'error');
-    } finally {
-        isProcessing = false;
-    }
-}
-
-// ===== HELPERS =====
-function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371000; // Raio da Terra em metros
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-}
-
-async function updateUserData() {
-    const user = auth.currentUser;
-    if (!user) return;
+    },
     
-    try {
-        const docSnap = await getDoc(doc(db, 'jogadores', user.uid));
-        if (docSnap.exists()) {
-            currentTeam = docSnap.data();
-            currentStep = currentTeam.etapa_atual || 1;
-            teamName.textContent = `Equipe: ${currentTeam.nome_equipe}`;
-            console.log('📊 Dados do jogador atualizados:', currentTeam);
+    validateText: async function() {
+        try {
+            const input = document.getElementById('textInput');
+            if (!input) {
+                showGameMessage('Campo não encontrado', 'error');
+                return;
+            }
+            
+            const userAnswer = input.value.trim().toLowerCase();
+            const stepData = window.currentStepData;
+            
+            if (!stepData) {
+                showGameMessage('Dados da etapa não carregados', 'error');
+                return;
+            }
+            
+            const expected = stepData.resposta_esperada.toLowerCase();
+            
+            console.log('🔍 Validando:', { userAnswer, expected });
+            
+            if (!userAnswer) {
+                showGameMessage('Digite sua resposta', 'error');
+                return;
+            }
+            
+            if (userAnswer === expected) {
+                // Completar etapa
+                const user = auth.currentUser;
+                if (!user) {
+                    showGameMessage('Usuário não autenticado', 'error');
+                    return;
+                }
+                
+                const nextStep = parseInt(currentStepSpan.textContent) + 1;
+                
+                await updateDoc(doc(db, 'jogadores', user.uid), {
+                    etapa_atual: nextStep,
+                    historico: arrayUnion({
+                        etapa: parseInt(currentStepSpan.textContent),
+                        tipo_validacao_usado: stepData.tipo_validacao || 'texto',
+                        sucesso: true,
+                        data_hora_envio: serverTimestamp()
+                    })
+                });
+                
+                showGameMessage('✅ Etapa concluída!', 'success');
+                await gameFunctions.loadStep(nextStep);
+                
+            } else {
+                showGameMessage('❌ Resposta incorreta. Tente novamente!', 'error');
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro na validação:', error);
+            showGameMessage(`Erro: ${error.message}`, 'error');
         }
-    } catch (error) {
-        console.error('Erro ao atualizar dados:', error);
     }
-}
+};
 
+// ===== FUNÇÕES AUXILIARES =====
 function showAuthMessage(msg, type) {
-    authMessage.textContent = msg;
-    authMessage.className = 'message ' + (type || '');
-    if (msg) {
-        authMessage.style.display = 'block';
-    } else {
-        authMessage.style.display = 'none';
+    if (authMessage) {
+        authMessage.textContent = msg;
+        authMessage.className = 'message ' + (type || '');
+        authMessage.style.display = msg ? 'block' : 'none';
     }
 }
 
 function showGameMessage(msg, type) {
-    gameMessage.textContent = msg;
-    gameMessage.className = 'message ' + (type || '');
-    if (msg) {
-        gameMessage.style.display = 'block';
-    } else {
-        gameMessage.style.display = 'none';
+    if (gameMessage) {
+        gameMessage.textContent = msg;
+        gameMessage.className = 'message ' + (type || '');
+        gameMessage.style.display = msg ? 'block' : 'none';
     }
 }
 
-// ===== AUTH STATE =====
+// ===== OBSERVADOR DE AUTENTICAÇÃO =====
 onAuthStateChanged(auth, async (user) => {
-    console.log('🔄 Auth state changed:', user ? `User ${user.uid}` : 'No user');
+    console.log('🔄 Auth mudou:', user ? `Usuário ${user.uid}` : 'Sem usuário');
     
     if (user) {
         try {
-            console.log('🔍 Verificando documento do jogador...');
+            console.log('🔍 Verificando documento...');
             const docSnap = await getDoc(doc(db, 'jogadores', user.uid));
             
             if (!docSnap.exists()) {
-                console.warn('⚠️ Documento do jogador não encontrado, deslogando...');
+                console.warn('⚠️ Documento não encontrado');
                 await signOut(auth);
                 showAuthMessage('Equipe não encontrada. Crie uma nova.', 'error');
                 return;
             }
             
             const teamData = docSnap.data();
-            console.log('📄 Dados do jogador:', teamData);
+            console.log('📄 Dados:', teamData);
             
             if (!teamData.ativo) {
-                // Usuário banido
-                console.warn('⛔ Usuário banido:', user.uid);
                 loginScreen.classList.remove('active');
                 gameScreen.classList.remove('active');
                 bannedScreen.classList.add('active');
                 return;
             }
             
-            // Usuário ativo
-            console.log('✅ Usuário ativo, carregando jogo...');
-            currentUser = user;
-            currentTeam = teamData;
-            currentStep = teamData.etapa_atual || 1;
-            
+            // Entrar no jogo
             loginScreen.classList.remove('active');
             bannedScreen.classList.remove('active');
             gameScreen.classList.add('active');
             
             teamName.textContent = `Equipe: ${teamData.nome_equipe}`;
-            await gameFunctions.loadStep(currentStep);
+            await gameFunctions.loadStep(teamData.etapa_atual || 1);
             
         } catch (error) {
-            console.error('❌ Erro ao carregar dados do jogador:', error);
+            console.error('❌ Erro:', error);
             showAuthMessage(`Erro: ${error.message}`, 'error');
         }
     } else {
-        // Usuário deslogado
-        console.log('👤 Usuário não autenticado, mostrando login');
+        // Deslogado
         loginScreen.classList.add('active');
         gameScreen.classList.remove('active');
         bannedScreen.classList.remove('active');
-        currentUser = null;
-        currentTeam = null;
-        
-        // Limpar scanner se existir
-        if (scanner) {
-            try {
-                await scanner.stop();
-                scanner = null;
-            } catch (e) {
-                // Ignorar
-            }
-        }
     }
 });
 
-// ===== EXPORT GLOBAL =====
+// ===== EXPORTAR PARA O GLOBAL =====
 window.auth = authFunctions;
 window.game = gameFunctions;
 
-console.log('🚀 Caça ao Tesouro iniciado!');
-console.log('📱 Abra o console para ver os logs de debug');
+console.log('✅ Script carregado!');
+console.log('📝 Funções disponíveis:');
+console.log('  - window.auth.login()');
+console.log('  - window.auth.register()');
+console.log('  - window.auth.logout()');
+console.log('  - window.game.loadStep(n)');
+console.log('  - window.game.validateText()');
