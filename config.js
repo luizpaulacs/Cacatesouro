@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Substitua com suas credenciais do Firebase
+// 🔴 COLE SUAS CREDENCIAIS COMPLETAS AQUI
 const firebaseConfig = {
     apiKey: "AIzaSyB5VCSgo9cUpWVWtZhNraOTLmpt_D0ElVM",
     authDomain: "cacaaotesouro-16c97.firebaseapp.com",
@@ -13,6 +13,12 @@ const firebaseConfig = {
     appId: "1:642869571833:web:1f30c594670b6acf67f228"
 };
 
+console.log('🔥 Inicializando Firebase...');
+
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+console.log('✅ Firebase inicializado:', firebaseConfig.projectId);
+
+export { auth, db };
