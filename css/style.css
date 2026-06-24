@@ -1,1 +1,103 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
+body{
+    font-family:Arial, Helvetica, sans-serif;
+    background:#111827;
+    color:white;
+}
+
+.container{
+    width:95%;
+    max-width:900px;
+    margin:auto;
+    padding:20px;
+}
+
+.card{
+    background:#1f2937;
+    border-radius:15px;
+    padding:20px;
+    margin-bottom:15px;
+}
+
+input,
+textarea,
+select{
+    width:100%;
+    padding:12px;
+    margin-top:5px;
+    margin-bottom:15px;
+    border:none;
+    border-radius:8px;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:.9;
+}
+
+.badge{
+    background:#16a34a;
+    padding:5px 10px;
+    border-radius:10px;
+}
+
+.erro{
+    background:#dc2626;
+}
+
+.sucesso{
+    background:#16a34a;
+}
+
+img{
+    max-width:100%;
+    border-radius:10px;
+}
+
+.admin-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+table{
+    border-collapse:collapse;
+}
+
+th,
+td{
+    padding:10px;
+    border-bottom:1px solid #374151;
+}
+
+.status-ativo{
+    color:#22c55e;
+    font-weight:bold;
+}
+
+.status-inativo{
+    color:#ef4444;
+    font-weight:bold;
+}
+
+@media(max-width:900px){
+
+    .admin-grid{
+        grid-template-columns:1fr;
+    }
+
+}
