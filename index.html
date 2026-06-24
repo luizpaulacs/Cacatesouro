@@ -20,12 +20,15 @@
             <h1>🏴‍☠️ Caça ao Tesouro</h1>
             <div id="authForm">
                 <input type="email" id="emailInput" placeholder="E-mail da equipe" required>
-                <input type="password" id="passwordInput" placeholder="Senha" required>
+                <input type="password" id="passwordInput" placeholder="Senha (mínimo 6 caracteres)" required minlength="6">
                 <div class="button-group">
-                    <button onclick="window.auth.login()">Entrar</button>
-                    <button onclick="window.auth.register()" class="secondary">Criar Equipe</button>
+                    <button onclick="window.auth.login()">🔐 Entrar</button>
+                    <button onclick="window.auth.register()" class="secondary">✨ Criar Equipe</button>
                 </div>
                 <div id="authMessage" class="message"></div>
+                <div style="margin-top:15px;padding:10px;background:#f8f9fa;border-radius:8px;font-size:0.9em;color:#666;">
+                    <strong>💡 Dica:</strong> Crie uma nova equipe para começar a jogar.
+                </div>
             </div>
         </div>
     </div>
