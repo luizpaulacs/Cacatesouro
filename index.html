@@ -128,83 +128,21 @@
         window.addDebugLog('⏳ Carregando Firebase...', 'info');
     </script>
     
-    <!-- SCRIPT PRINCIPAL - COM CAMINHO RELATIVO -->
+    <!-- SCRIPT PRINCIPAL - AGORA VAI FUNCIONAR -->
     <script type="module">
         try {
             window.addDebugLog('🔄 Importando script.js...', 'info');
             import('./script.js').then(() => {
                 window.addDebugLog('✅ script.js carregado!', 'success');
+                window.addDebugLog('🎮 Jogo pronto para usar!', 'success');
             }).catch((error) => {
                 window.addDebugLog(`❌ Erro: ${error.message}`, 'error');
-                window.addDebugLog('💡 Tentando carregar com caminho absoluto...', 'warning');
-                
-                // Tentar com caminho absoluto
-                import('https://luizpaulacs.github.io/Cacatesouro/script.js').then(() => {
-                    window.addDebugLog('✅ script.js carregado (absoluto)!', 'success');
-                }).catch((err2) => {
-                    window.addDebugLog(`❌ Falhou também: ${err2.message}`, 'error');
-                    window.addDebugLog('💡 Verifique se o arquivo existe no repositório', 'warning');
-                });
             });
         } catch (error) {
             window.addDebugLog(`❌ Erro crítico: ${error.message}`, 'error');
         }
     </script>
     
-    <!-- SCRIPT DE EMERGÊNCIA COM API KEY CORRETA -->
-    <script type="module">
-        setTimeout(async () => {
-            try {
-                window.addDebugLog('🔄 Conexão direta...', 'info');
-                
-                const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js");
-                const { getAuth, signInWithEmailAndPassword, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
-                const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
-                
-                // 🔴 SUAS CREDENCIAIS COMPLETAS AQUI
-                const firebaseConfig = {
-                    apiKey: "AIzaSyB5VC5go9cF3kVvX5HqL8tVnR6PkS2M7o",  // COLE A CHAVE COMPLETA
-                    authDomain: "cacaoatesouro-16c97.firebaseapp.com",
-                    projectId: "cacaoatesouro-16c97",
-                    storageBucket: "cacaoatesouro-16c97.appspot.com",
-                    messagingSenderId: "642869571833",
-                    appId: "1:642869571833:web:1a2b3c4d5e6f7g8h9i0j"
-                };
-                
-                // Validar se a API Key está completa
-                if (firebaseConfig.apiKey === "AIzaSyB5VC5go9cF3kVvX5HqL8tVnR6PkS2M7o") {
-                    window.addDebugLog('⚠️ Você precisa colocar sua API Key completa!', 'warning');
-                    window.addDebugLog('📋 Copie do Firebase Console', 'info');
-                    return;
-                }
-                
-                const app = initializeApp(firebaseConfig);
-                const auth = getAuth(app);
-                const db = getFirestore(app);
-                
-                window.addDebugLog('✅ Firebase conectado!', 'success');
-                
-                // Tentar login automático
-                try {
-                    window.addDebugLog('🔐 Tentando login...', 'info');
-                    const userCredential = await signInWithEmailAndPassword(auth, 'akagaipora@gmail.com', '123456');
-                    window.addDebugLog(`✅ Login OK! UID: ${userCredential.user.uid}`, 'success');
-                    
-                    const docSnap = await getDoc(doc(db, 'jogadores', userCredential.user.uid));
-                    if (docSnap.exists()) {
-                        window.addDebugLog('✅ Documento encontrado!', 'success');
-                        window.addDebugLog('🎮 Jogo pronto!', 'success');
-                    } else {
-                        window.addDebugLog('⚠️ Documento não encontrado', 'warning');
-                    }
-                } catch (error) {
-                    window.addDebugLog(`❌ Login: ${error.message}`, 'error');
-                }
-                
-            } catch (error) {
-                window.addDebugLog(`❌ Conexão: ${error.message}`, 'error');
-            }
-        }, 2000);
-    </script>
+    <!-- NÃO TEM MAIS SCRIPT DE EMERGÊNCIA PARA EVITAR CONFLITO -->
 </body>
 </html>
