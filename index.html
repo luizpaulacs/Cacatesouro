@@ -19,25 +19,35 @@
         <div class="container">
             <h1>🏴‍☠️ Caça ao Tesouro</h1>
             
-            <!-- Status do Firebase -->
-            <div id="firebaseStatus" style="text-align:center;padding:10px;background:#f8f9fa;border-radius:8px;margin-bottom:15px;font-size:0.9em;">
-                ⏳ Carregando Firebase...
+            <!-- STATUS DO FIREBASE COM DEBUG VISUAL -->
+            <div id="firebaseStatus" style="text-align:center;padding:12px;background:#fff3cd;border-radius:8px;margin-bottom:15px;font-size:0.9em;border:2px solid #ffc107;">
+                ⏳ Aguardando conexão...
+            </div>
+            
+            <!-- LOG DE DEBUG VISUAL -->
+            <div id="debugLog" style="background:#1a1a2e;color:#00ff41;padding:10px;border-radius:8px;margin-bottom:15px;font-family:monospace;font-size:11px;max-height:150px;overflow-y:auto;display:none;">
+                <div id="debugContent">>> Sistema iniciado...</div>
             </div>
             
             <div id="authForm">
-                <input type="email" id="emailInput" placeholder="E-mail da equipe" required>
-                <input type="password" id="passwordInput" placeholder="Senha (mínimo 6 caracteres)" required minlength="6">
+                <input type="email" id="emailInput" placeholder="E-mail da equipe" value="akagaipora@gmail.com">
+                <input type="password" id="passwordInput" placeholder="Senha" value="123456">
                 
-                <div style="display:flex;gap:10px;margin:15px 0;">
-                    <button onclick="window.auth.login()" style="flex:1;padding:14px;background:#764ba2;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
+                <div style="display:flex;gap:10px;margin:15px 0;flex-wrap:wrap;">
+                    <button onclick="window.auth.login()" style="flex:1;min-width:120px;padding:14px;background:#764ba2;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
                         🔐 Entrar
                     </button>
-                    <button onclick="window.auth.register()" style="flex:1;padding:14px;background:#667eea;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
-                        ✨ Criar Equipe
+                    <button onclick="window.auth.register()" style="flex:1;min-width:120px;padding:14px;background:#667eea;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
+                        ✨ Criar
                     </button>
                 </div>
                 
                 <div id="authMessage" class="message"></div>
+                
+                <!-- Botão para mostrar debug -->
+                <button onclick="toggleDebug()" style="width:100%;padding:8px;background:#6c757d;color:white;border:none;border-radius:8px;font-size:12px;cursor:pointer;margin-top:10px;">
+                    🔧 Mostrar Debug
+                </button>
                 
                 <div style="margin-top:20px;padding:12px;background:#f8f9fa;border-radius:8px;font-size:0.9em;color:#666;border-left:4px solid #764ba2;">
                     <strong>💡 Dica:</strong><br>
@@ -86,44 +96,62 @@
         </div>
     </div>
 
-    <!-- CARREGAR O SCRIPT -->
+    <!-- SCRIPT PRINCIPAL -->
     <script src="script.js" type="module"></script>
     
-    <!-- Script de verificação -->
+    <!-- FUNÇÃO PARA MOSTRAR DEBUG -->
     <script>
-        console.log('📄 index.html carregado');
+        let debugVisible = false;
         
-        // Verificar se o módulo carregou
-        setTimeout(() => {
+        function toggleDebug() {
+            const log = document.getElementById('debugLog');
+            debugVisible = !debugVisible;
+            log.style.display = debugVisible ? 'block' : 'none';
+        }
+        
+        // Função para adicionar log visual
+        window.addDebugLog = function(msg, type = 'info') {
+            const content = document.getElementById('debugContent');
+            const time = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#00ff41',
+                error: '#ff4444',
+                success: '#00ff88',
+                warning: '#ffaa00'
+            };
+            content.innerHTML += `<div style="color:${colors[type] || '#00ff41'}">[${time}] ${msg}</div>`;
+            content.scrollTop = content.scrollHeight;
+            
+            // Também atualiza o status
             const status = document.getElementById('firebaseStatus');
-            if (window.auth) {
-                console.log('✅ window.auth disponível!');
-                status.innerHTML = '✅ Firebase conectado! Pronto para jogar.';
-                status.style.background = '#d4edda';
-                status.style.color = '#155724';
-            } else {
-                console.error('❌ window.auth NÃO disponível');
-                status.innerHTML = '❌ Erro ao carregar o Firebase. Verifique o console (F12).';
+            if (type === 'error') {
+                status.innerHTML = '❌ ' + msg;
                 status.style.background = '#f8d7da';
                 status.style.color = '#721c24';
+                status.style.borderColor = '#dc3545';
+            } else if (type === 'success') {
+                status.innerHTML = '✅ ' + msg;
+                status.style.background = '#d4edda';
+                status.style.color = '#155724';
+                status.style.borderColor = '#28a745';
+            } else {
+                status.innerHTML = 'ℹ️ ' + msg;
+                status.style.background = '#fff3cd';
+                status.style.color = '#856404';
+                status.style.borderColor = '#ffc107';
+            }
+        };
+        
+        // Verificar se o script carregou
+        setTimeout(() => {
+            if (window.auth) {
+                window.addDebugLog('✅ Script carregado!', 'success');
+                window.addDebugLog('✅ Firebase disponível', 'success');
+            } else {
+                window.addDebugLog('❌ Script NÃO carregou!', 'error');
+                window.addDebugLog('💡 Atualize a página ou verifique os arquivos', 'warning');
             }
         }, 3000);
-  <!-- Adicione ANTES do fechamento do body -->
-<script type="module">
-    // Script de emergência para testar diretamente
-    import { auth, db } from './firebase-config.js';
-    import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    
-    console.log('🚨 Script de emergência carregado');
-    
-    // Tentar login automático com as credenciais do teste
-    try {
-        const result = await signInWithEmailAndPassword(auth, 'akagaipora@gmail.com', '123456');
-        console.log('✅ Login automático bem-sucedido!', result.user.uid);
-    } catch (error) {
-        console.error('❌ Login automático falhou:', error.message);
-    }
     </script>
-    
 </body>
 </html>
