@@ -1,95 +1,861 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Caça ao Tesouro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<title>Caça ao Tesouro</title>
+    :root {
+      --night: #0D1B2A;
+      --night-mid: #1A2E42;
+      --gold: #E8C547;
+      --gold-dim: #B89A30;
+      --paper: #F5F0E8;
+      --paper-dim: #E0D8C8;
+      --forest: #2A5C45;
+      --forest-light: #3A7A5E;
+      --danger: #C0392B;
+      --danger-light: #E74C3C;
+      --text-on-night: #CBD5E0;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
 
-<link rel="stylesheet" href="css/style.css">
+    html, body {
+      height: 100%;
+      background: var(--night);
+      color: var(--paper);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
 
-<script src="https://unpkg.com/html5-qrcode"></script>
+    /* ── STARS BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 15% 20%, rgba(232,197,71,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 72% 8%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 40% 55%, rgba(255,255,255,0.2) 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 40%, rgba(232,197,71,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 5% 80%, rgba(255,255,255,0.25) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 60% 75%, rgba(255,255,255,0.2) 0%, transparent 100%),
+        radial-gradient(1px 1px at 92% 65%, rgba(232,197,71,0.35) 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 90%, rgba(255,255,255,0.15) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
 
+    #app {
+      position: relative;
+      z-index: 1;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── SCREENS ── */
+    .screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+    .screen.active { display: flex; }
+
+    /* ── HEADER ── */
+    .app-header {
+      background: linear-gradient(135deg, var(--night-mid) 0%, var(--night) 100%);
+      border-bottom: 1px solid rgba(232,197,71,0.2);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .app-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+      line-height: 1.2;
+    }
+
+    .logo-sub {
+      font-size: 0.65rem;
+      color: var(--text-on-night);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid rgba(192,57,43,0.5);
+      color: var(--danger-light);
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.03em;
+    }
+    .btn-logout:hover { background: var(--danger); border-color: var(--danger); color: white; }
+
+    /* ── LOGIN SCREEN ── */
+    #screen-login {
+      justify-content: center;
+      align-items: center;
+      padding: 24px 20px;
+      gap: 0;
+    }
+
+    .login-hero {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-compass {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 16px;
+      position: relative;
+    }
+
+    .compass-ring {
+      width: 80px;
+      height: 80px;
+      border: 3px solid var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      animation: compass-glow 3s ease-in-out infinite;
+    }
+
+    @keyframes compass-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(232,197,71,0); }
+      50% { box-shadow: 0 0 20px 4px rgba(232,197,71,0.3); }
+    }
+
+    .login-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .login-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-on-night);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .login-card {
+      background: var(--night-mid);
+      border: 1px solid rgba(232,197,71,0.15);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .tab-group {
+      display: flex;
+      background: rgba(0,0,0,0.3);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 24px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      color: var(--text-on-night);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.03em;
+    }
+    .tab-btn.active {
+      background: var(--gold);
+      color: var(--night);
+    }
+
+    .field-group {
+      margin-bottom: 16px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-on-night);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .field-input {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      color: var(--paper);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .field-input:focus { border-color: var(--gold); }
+    .field-input::placeholder { color: rgba(203,213,224,0.4); }
+
+    .register-extra { display: none; }
+    .register-extra.visible { display: block; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: var(--gold);
+      color: var(--night);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+    .btn-primary:hover { background: var(--gold-dim); transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .auth-error {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: rgba(192,57,43,0.15);
+      border: 1px solid rgba(192,57,43,0.4);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      color: #FF7070;
+      display: none;
+    }
+    .auth-error.visible { display: block; }
+
+    /* ── LOADING ── */
+    #screen-loading {
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(232,197,71,0.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      color: var(--text-on-night);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── GAME SCREEN ── */
+    #screen-game {
+      flex-direction: column;
+    }
+
+    .game-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── PROGRESS TRAIL ── */
+    .progress-trail {
+      background: var(--night-mid);
+      border: 1px solid rgba(232,197,71,0.15);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+    }
+
+    .trail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .trail-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-on-night);
+      font-weight: 600;
+    }
+
+    .trail-counter {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .trail-dots {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .trail-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.3);
+      flex-shrink: 0;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .trail-dot.done {
+      background: var(--forest);
+      border-color: var(--forest-light);
+      color: white;
+    }
+    .trail-dot.current {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--night);
+      box-shadow: 0 0 12px rgba(232,197,71,0.5);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 8px rgba(232,197,71,0.4); }
+      50% { box-shadow: 0 0 20px rgba(232,197,71,0.7); }
+    }
+
+    .trail-line {
+      flex: 1;
+      min-width: 12px;
+      height: 2px;
+      background: rgba(255,255,255,0.1);
+    }
+    .trail-line.done { background: var(--forest-light); }
+
+    /* ── CLUE CARD ── */
+    .clue-card {
+      background: var(--night-mid);
+      border: 1px solid rgba(232,197,71,0.15);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .clue-card-header {
+      background: linear-gradient(135deg, rgba(232,197,71,0.12) 0%, transparent 60%);
+      border-bottom: 1px solid rgba(232,197,71,0.1);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .clue-badge {
+      background: var(--gold);
+      color: var(--night);
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .clue-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--paper);
+      line-height: 1.3;
+    }
+
+    .clue-image {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .clue-enigma {
+      padding: 20px;
+    }
+
+    .enigma-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .enigma-text {
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--paper);
+      font-style: italic;
+    }
+
+    /* ── VALIDATION AREAS ── */
+    .validation-zone {
+      background: var(--night-mid);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .validation-title {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-on-night);
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .type-pill {
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .type-pill.texto { background: rgba(42,92,69,0.4); color: #6FCF97; border: 1px solid rgba(42,92,69,0.6); }
+    .type-pill.qr_code { background: rgba(41,82,163,0.4); color: #90CAF9; border: 1px solid rgba(41,82,163,0.6); }
+    .type-pill.gps { background: rgba(126,34,206,0.3); color: #C084FC; border: 1px solid rgba(126,34,206,0.5); }
+
+    /* TEXT VALIDATION */
+    .text-input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .answer-input {
+      flex: 1;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      color: var(--paper);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      padding: 13px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .answer-input:focus { border-color: var(--gold); }
+    .answer-input::placeholder { color: rgba(203,213,224,0.35); }
+
+    .btn-submit {
+      padding: 13px 20px;
+      background: var(--forest);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-submit:hover { background: var(--forest-light); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* QR VALIDATION */
+    .btn-qr {
+      width: 100%;
+      padding: 16px;
+      background: rgba(41,82,163,0.2);
+      border: 2px dashed rgba(144,202,249,0.4);
+      border-radius: var(--radius-sm);
+      color: #90CAF9;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-qr:hover { background: rgba(41,82,163,0.35); border-color: rgba(144,202,249,0.7); }
+
+    #qr-reader-container {
+      display: none;
+      margin-top: 12px;
+    }
+    #qr-reader-container.visible { display: block; }
+    #qr-reader {
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .btn-stop-scan {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      background: rgba(192,57,43,0.2);
+      border: 1px solid rgba(192,57,43,0.4);
+      border-radius: var(--radius-sm);
+      color: #FF7070;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-stop-scan:hover { background: rgba(192,57,43,0.35); }
+
+    /* GPS VALIDATION */
+    .btn-gps {
+      width: 100%;
+      padding: 16px;
+      background: rgba(126,34,206,0.15);
+      border: 2px dashed rgba(192,132,252,0.4);
+      border-radius: var(--radius-sm);
+      color: #C084FC;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-gps:hover { background: rgba(126,34,206,0.25); border-color: rgba(192,132,252,0.7); }
+    .btn-gps:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .gps-status {
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.2);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      color: var(--text-on-night);
+      display: none;
+      line-height: 1.5;
+    }
+    .gps-status.visible { display: block; }
+    .gps-hint {
+      font-size: 0.75rem;
+      color: rgba(203,213,224,0.5);
+      margin-top: 6px;
+    }
+
+    /* FEEDBACK */
+    .validation-feedback {
+      margin-top: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+    .validation-feedback.visible { display: flex; }
+    .validation-feedback.success {
+      background: rgba(42,92,69,0.3);
+      border: 1px solid rgba(42,92,69,0.6);
+      color: #6FCF97;
+    }
+    .validation-feedback.error {
+      background: rgba(192,57,43,0.2);
+      border: 1px solid rgba(192,57,43,0.4);
+      color: #FF7070;
+    }
+
+    /* ── VICTORY SCREEN ── */
+    #screen-victory {
+      justify-content: center;
+      align-items: center;
+      padding: 32px 24px;
+      text-align: center;
+    }
+
+    .victory-icon {
+      font-size: 72px;
+      margin-bottom: 20px;
+      animation: victory-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes victory-pop {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .victory-title {
+      font-family: 'Cinzel', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.06em;
+      margin-bottom: 12px;
+    }
+
+    .victory-subtitle {
+      font-size: 1rem;
+      color: var(--text-on-night);
+      line-height: 1.6;
+      max-width: 320px;
+    }
+
+    .victory-team {
+      margin-top: 24px;
+      padding: 16px 24px;
+      background: rgba(232,197,71,0.1);
+      border: 1px solid rgba(232,197,71,0.3);
+      border-radius: var(--radius);
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* ── BANNED SCREEN ── */
+    #screen-banned {
+      justify-content: center;
+      align-items: center;
+      padding: 32px 24px;
+      text-align: center;
+    }
+
+    .banned-icon { font-size: 64px; margin-bottom: 20px; }
+    .banned-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      color: var(--danger-light);
+      margin-bottom: 12px;
+      letter-spacing: 0.04em;
+    }
+    .banned-text { color: var(--text-on-night); line-height: 1.6; max-width: 300px; }
+
+    /* ── TEAM INFO BAR ── */
+    .team-info-bar {
+      padding: 10px 20px;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--text-on-night);
+    }
+
+    .team-dot {
+      width: 8px;
+      height: 8px;
+      background: #6FCF97;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
 </head>
-
 <body>
+<div id="app">
 
-<div class="container">
+  <!-- LOADING -->
+  <div id="screen-loading" class="screen active">
+    <div class="spinner"></div>
+    <p class="loading-text">Preparando a aventura…</p>
+  </div>
 
-    <div class="card" id="loginBox">
-
-        <h2>Equipe</h2>
-
-        <input
-            type="text"
-            id="nomeEquipe"
-            placeholder="Nome da Equipe">
-
-        <input
-            type="email"
-            id="email"
-            placeholder="Email">
-
-        <input
-            type="password"
-            id="senha"
-            placeholder="Senha">
-
-        <button id="btnCadastro">
-            Criar Equipe
-        </button>
-
-        <br><br>
-
-        <button id="btnLogin">
-            Entrar
-        </button>
-
+  <!-- LOGIN -->
+  <div id="screen-login" class="screen">
+    <div class="login-hero">
+      <div class="login-compass">
+        <div class="compass-ring">🧭</div>
+      </div>
+      <h1 class="login-title">Caça ao Tesouro</h1>
+      <p class="login-subtitle">Missão em Campo</p>
     </div>
 
-    <div id="jogo" style="display:none;">
+    <div class="login-card">
+      <div class="tab-group">
+        <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Entrar</button>
+        <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Nova Equipe</button>
+      </div>
 
-        <div class="card">
+      <div class="field-group register-extra" id="field-teamname">
+        <label class="field-label" for="input-teamname">Nome da Equipe</label>
+        <input class="field-input" type="text" id="input-teamname" placeholder="Ex: Os Exploradores" autocomplete="off" />
+      </div>
 
-            <h2 id="tituloEtapa"></h2>
+      <div class="field-group">
+        <label class="field-label" for="input-email">Email</label>
+        <input class="field-input" type="email" id="input-email" placeholder="equipe@email.com" autocomplete="email" />
+      </div>
 
-            <span
-            id="numeroEtapa"
-            class="badge"></span>
+      <div class="field-group">
+        <label class="field-label" for="input-password">Senha</label>
+        <input class="field-input" type="password" id="input-password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
 
-        </div>
-
-        <div class="card">
-
-            <img
-            id="imagemDica"
-            style="display:none">
-
-            <p id="textoEnigma"></p>
-
-        </div>
-
-        <div
-        class="card"
-        id="validacaoArea">
-
-        </div>
-
-        <div class="card">
-
-            <h3>Histórico</h3>
-
-            <ul id="historico"></ul>
-
-        </div>
-
+      <button class="btn-primary" id="btn-auth" onclick="handleAuth()">⚔️ Iniciar Aventura</button>
+      <div class="auth-error" id="auth-error"></div>
     </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="screen-game" class="screen">
+    <div class="app-header">
+      <div class="app-logo">
+        <div class="logo-icon">🗺️</div>
+        <div>
+          <div class="logo-text">Caça ao Tesouro</div>
+          <div class="logo-sub">Missão em Campo</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="handleLogout()">Sair</button>
+    </div>
+
+    <div class="team-info-bar">
+      <div class="team-dot"></div>
+      <span id="team-name-display">Equipe</span>
+    </div>
+
+    <div class="game-body">
+      <!-- Progress Trail -->
+      <div class="progress-trail">
+        <div class="trail-header">
+          <span class="trail-label">Progresso da Missão</span>
+          <span class="trail-counter" id="trail-counter">Etapa 1</span>
+        </div>
+        <div class="trail-dots" id="trail-dots"></div>
+      </div>
+
+      <!-- Clue Card -->
+      <div class="clue-card" id="clue-card">
+        <div class="clue-card-header">
+          <span class="clue-badge" id="clue-step-badge">ETAPA 1</span>
+          <h2 class="clue-title" id="clue-title">Carregando…</h2>
+        </div>
+        <img class="clue-image" id="clue-image" src="" alt="Dica visual" style="display:none" />
+        <div class="clue-enigma">
+          <div class="enigma-label">Enigma</div>
+          <p class="enigma-text" id="clue-enigma-text">Carregando pista…</p>
+        </div>
+      </div>
+
+      <!-- Validation Zone -->
+      <div class="validation-zone" id="validation-zone">
+        <div class="validation-title" id="validation-title">Resposta</div>
+        <div id="validation-content"></div>
+        <div class="validation-feedback" id="validation-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VICTORY -->
+  <div id="screen-victory" class="screen">
+    <div class="victory-icon">🏆</div>
+    <h2 class="victory-title">Tesouro Encontrado!</h2>
+    <p class="victory-subtitle">Parabéns! Sua equipe completou todos os desafios e encontrou o tesouro.</p>
+    <div class="victory-team" id="victory-team-name"></div>
+  </div>
+
+  <!-- BANNED -->
+  <div id="screen-banned" class="screen">
+    <div class="banned-icon">🚫</div>
+    <h2 class="banned-title">Acesso Encerrado</h2>
+    <p class="banned-text">Esta equipe foi desativada pelo administrador. Entre em contato com a organização do evento.</p>
+  </div>
 
 </div>
-
-<script type="module" src="js/auth.js"></script>
-<script type="module" src="js/game.js"></script>
-
+<script type="module" src="script.js"></script>
+<script>
+  function switchTab(mode) {
+    const isRegister = mode === 'register';
+    document.getElementById('tab-login').classList.toggle('active', !isRegister);
+    document.getElementById('tab-register').classList.toggle('active', isRegister);
+    document.querySelectorAll('.register-extra').forEach(el =>
+      el.classList.toggle('visible', isRegister));
+    document.getElementById('btn-auth').textContent =
+      isRegister ? '🗺️ Criar Equipe' : '⚔️ Iniciar Aventura';
+    document.getElementById('auth-error').classList.remove('visible');
+    window._authMode = mode;
+  }
+  window._authMode = 'login';
+</script>
 </body>
 </html>
