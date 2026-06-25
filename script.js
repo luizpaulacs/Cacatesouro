@@ -335,7 +335,7 @@ window.checkGPS = function () {
       const distance = haversineDistance(lat, lng, targetLat, targetLng);
       const distM = Math.round(distance);
 
-      if (distM <= 25) {
+      if (distM <= 50) {
         showFeedback("success", `✅ Local confirmado! Você estava a ${distM}m do ponto.`);
         await advancePlayer("gps");
       } else {
